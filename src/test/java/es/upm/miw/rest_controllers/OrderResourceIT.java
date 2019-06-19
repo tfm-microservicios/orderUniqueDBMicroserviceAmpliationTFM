@@ -5,14 +5,13 @@ import es.upm.miw.business_services.RestService;
 import es.upm.miw.documents.Order;
 import es.upm.miw.documents.OrderLine;
 import es.upm.miw.dtos.OrderDto;
-import es.upm.miw.dtos.OrderSearchDto;
 import es.upm.miw.repositories.OrderRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -49,6 +48,23 @@ public class OrderResourceIT {
                 this.orderRepository.save(order);
             }
         }
+    }
+
+    @AfterEach
+    void cleanDB() {
+        orderRepository.deleteAll();
+    }
+
+    @Test
+    void testReadAll (){
+        List<OrderDto> orders = Arrays.asList(this.restService.loginAdmin()
+                .restBuilder(new RestBuilder<OrderDto[]>())
+                .clazz(OrderDto[].class)
+                .path(OrderResource.ORDERS)
+                .get()
+                .build());
+        assertNotNull(orders);
+        assertEquals(3, orders.size());
     }
 
 }
