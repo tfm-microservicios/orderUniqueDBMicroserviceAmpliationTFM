@@ -5,21 +5,17 @@ import es.upm.miw.business_services.RestService;
 import es.upm.miw.documents.Order;
 import es.upm.miw.documents.OrderLine;
 import es.upm.miw.dtos.OrderDto;
-import es.upm.miw.dtos.OrderSearchDto;
-import es.upm.miw.exceptions.NotFoundException;
 import es.upm.miw.repositories.OrderRepository;
 import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @TestConfig
 public class OrderControllerIT {
@@ -55,8 +51,15 @@ public class OrderControllerIT {
         }
     }
 
+    @Test
+    void testReadAll() {
+        List<OrderDto> orderDtos = this.orderController.readAll();
+        assertNotNull(orderDtos);
+        assertEquals(3, orderDtos.size());
+    }
+
     @AfterEach
-    void cleanDB (){
+    void cleanDB() {
         orderRepository.deleteAll();
     }
 
