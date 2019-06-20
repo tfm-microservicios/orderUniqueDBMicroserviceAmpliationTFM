@@ -66,7 +66,7 @@ public class OrderController {
                     .clazz(ArticleDto.class).heroku().serverUri(articleProviderURI)
                     .path(ARTICLES).path(CODE_ID).expand(orderLine.getArticleId())
                     .body(orderLine).get().log().build();
-            articleDto.setStock(articleDto.getStock()-orderLine.getFinalAmount());
+            articleDto.setStock(articleDto.getStock()+orderLine.getFinalAmount());
             this.restService.setToken(token).restBuilder(new RestBuilder<ArticleDto>())
                     .clazz(ArticleDto.class).heroku().serverUri(articleProviderURI)
                     .path(ARTICLES).path(CODE_ID).expand(orderLine.getArticleId())
