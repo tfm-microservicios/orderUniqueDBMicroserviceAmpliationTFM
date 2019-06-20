@@ -5,17 +5,19 @@ import es.upm.miw.business_services.RestService;
 import es.upm.miw.documents.Order;
 import es.upm.miw.documents.OrderLine;
 import es.upm.miw.dtos.OrderDto;
+import es.upm.miw.exceptions.BadRequestException;
+import es.upm.miw.exceptions.UnauthorizedException;
 import es.upm.miw.repositories.OrderRepository;
 import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestConfig
 public class OrderControllerIT {
@@ -31,7 +33,7 @@ public class OrderControllerIT {
 
     private static String idOrder = "";
 
-    private static final String BEARER = "Bearer ";
+    public static final String BEARER = "Bearer ";
 
     @BeforeEach
     void createOrder() {
@@ -40,7 +42,8 @@ public class OrderControllerIT {
             String providerId = "5cfffb93525ceb1784133a24";
             String description = "ORDER-" + String.valueOf((int) (Math.random() * 10000));
             for (int i = 0; i < 3; i++) {
-                OrderLine[] orderLines = Arrays.array(new OrderLine(articlesId[i], 4), new OrderLine(articlesId[i], 5));
+                OrderLine[] orderLines = Arrays.array(new OrderLine(articlesId[i], 4));
+                orderLines[0].setFinalAmount(1);
                 if (i == 2) {
                     description = "ORDER-02019";
                 }
@@ -56,6 +59,39 @@ public class OrderControllerIT {
         List<OrderDto> orderDtos = this.orderController.readAll();
         assertNotNull(orderDtos);
         assertEquals(3, orderDtos.size());
+    }
+
+    @Test
+    void testCloseOrderPass() {
+        Order order = orderRepository.findById(idOrder).orElse(null);
+        assertNotNull(order);
+        assertNull(order.getClosingDate());
+        orderController.closeOrder(
+                new OrderDto(order), BEARER + this.restService.loginAdmin().getTokenDto().getToken());
+        order = orderRepository.findById(order.getId()).orElse(null);
+        assertNotNull(order);
+        assertNotNull(order.getClosingDate());
+    }
+
+    @Test
+    void testCloseOrderOrderLineEmpty() {
+        Order order = orderRepository.findById(idOrder).orElse(null);
+        assertNotNull(order);
+        order.setOrderLines(new OrderLine[]{});
+        assertThrows(BadRequestException.class, () ->
+                orderController.closeOrder(
+                        new OrderDto(order), BEARER + this.restService.loginAdmin().getTokenDto().getToken()
+                )
+        );
+    }
+
+    @Test
+    void testCloseOrderBadRequest() {
+        Order order = orderRepository.findById(idOrder).orElse(null);
+        assertNotNull(order);
+        assertThrows(HttpClientErrorException.Unauthorized.class, () ->
+                orderController.closeOrder(new OrderDto(order), "Bearer Fail")
+        );
     }
 
     @AfterEach

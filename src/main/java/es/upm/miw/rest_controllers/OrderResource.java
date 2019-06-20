@@ -17,7 +17,6 @@ import java.util.List;
 public class OrderResource {
 
     public static final String ORDERS = "/orders";
-    public static final String ID = "/{id}";
     public static final String CLOSE = "/close";
 
     @Autowired
@@ -28,12 +27,12 @@ public class OrderResource {
         return this.orderController.readAll();
     }
 
-    @PostMapping
-    public OrderDto close(@Valid @RequestBody OrderDto orderDto) {
+    @PostMapping(value = CLOSE)
+    public OrderDto close(@Valid @RequestBody OrderDto orderDto, @RequestHeader("Authorization") String token) {
         if(orderDto.getOrderLines() == null) {
             throw new BadRequestException("orderLine is empty");
         } else {
-            return this.orderController.closeOrder(orderDto);
+            return this.orderController.closeOrder(orderDto, token);
         }
     }
 
